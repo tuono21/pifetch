@@ -7,6 +7,7 @@
 # add 32/64 bit kernel and userspace check
 # add uptime
 # 6-30-2025 add desktop info
+# 2-5-2026 add cpu revision
 
 bold=`tput smso`
 boldoff=`tput rmso`
@@ -50,8 +51,9 @@ fi
 #Begin
 echo
 echo -e "${bold}${blue}  S Y S T E M  D E T A I L S  F O R: $(whoami)@$(hostname)  ${default}"
-echo -e "$(cat /proc/cpuinfo | grep 'Model'| cut -f2 -d ":")"
-echo -e "$(cat /proc/cpuinfo | grep 'model name'| cut -f2 -d ":"|sort - | uniq ) $(lscpu|grep "^Model name:"|tr -s " "|cut -d " " -f 3) $(lscpu|grep "CPU(s):"|tr -s " ")"
+echo -en "$(cat /proc/cpuinfo | grep 'Model'| cut -f2 -d ":")"
+echo -e " - $(cat /proc/cpuinfo | grep -m 1  'revision')"
+echo -e "$(cat /proc/cpuinfo | grep 'model name'| cut -f2 -d ":"|sort - | uniq ) $(lscpu|grep "^Model name:"|tr -s " "|cut -d " " -f 3) $(lscpu|grep -v "NUMA"|grep "CPU(s):"|tr -s " ")"
 echo -e "Serial Number $(cat /proc/cpuinfo | grep 'Serial'| cut -f2 -d ":")${default}"
 output=$(ip addr|grep "inet "|grep -v "scope host"|tr -s " ")
 if [[ "$output" == "" ]]; then
