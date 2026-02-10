@@ -8,7 +8,9 @@
 # add uptime
 # 6-30-2025 add desktop info
 # 2-5-2026 add cpu revision
-# 2-10-26 fixed cpu/board revision and blue bars
+# 2-10-26 fixed cpu/board revision, blue bars pad() and boot_order
+# rpi-eeprom-config -e to remove boot_order setting entirely once set
+# ? feature - add check for loaded module to determine cpu stepping
 
 bold=`tput smso`
 boldoff=`tput rmso`
@@ -180,7 +182,7 @@ if [[ $kern = "aarch64" ]]; then
 else 
 	kern="32"
 fi
-echo "${yellow}The Linux kernel is $kern bit and the OS userspace is $userspace bit"
+echo "${yellow}The Linux kernel is ${green}$kern${yellow} bit and the OS userspace is ${green}$userspace${yellow} bit"
 
 echo -e "${bold}${blue}  D R I V E   F E A T U R E S"|pad
 rootfspart=$(findmnt | grep "^/" | tr -s " " | cut -d " " -f 2)
@@ -224,12 +226,11 @@ echo -e "${bold}${blue}  M O U N T E D  P A R T I T I O N S"|pad
 df -Th|grep -v "tmp"
 
 #32bit broked pi zero 2w
-echo -e "${bold}${blue}  E E P R O M   V E R S I O N S"|pad
+echo -e "${bold}${blue}  E E P R O M   V E R S I O N S  - VL805 supports onboard USB3 controller on Pi4 models"|pad
 output=$(sudo rpi-eeprom-update)
 output2=$(echo "$output"|grep -i skipping)
 if [[ "$output2" == "" ]]; then
   echo "$output"
-  echo "VL805 supports onboard USB3 controller"
 else
   echo "No EEPROM found - pre-Pi4 board"
 fi
@@ -240,12 +241,12 @@ if [[ "$output4" == "BOOT_ORDER=0xf41" ]]; then
 elif [[ "$output4" != "" ]]; then
   echo "${yellow}R to L - 1-SD, 2-NET, 3-RPI, 4-USB-MSD, 6-NVME, 7-HTTP, f-RESTART"
   echo "Non-Default $output4"
-elif [[ "$output2" != "" ]]; then
+elif [[ "$output2" == "" ]]; then
   echo "${green}DEFAULT boot order 0xf41 in effect - no custom setting - tries SD, USB-MSD, then RESTART${default}"
 fi
 
-#read -p "${blue} Press key for more ${default}" -n1 -s
-#echo
+read -p "${blue} Press key for more ${default}" -n1 -s
+echo
 echo -e "${bold}${blue}  P C I / U S B   D E V I C E S"|pad
 lspci
 lsusb
