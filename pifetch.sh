@@ -24,9 +24,13 @@ trim() {
 }
 
 pad() {
-	local spaces="                                                                                                    "
+	local spaces="                                                                               "
 	local temp="$(cat)$spaces"
-	echo -e "${temp:0:columns}${default}"
+	local columns=`tput cols`
+	if [ "$columns" -gt 100 ]; then
+		columns=100
+	fi	
+	echo "${temp:0:$columns}${default}"
 }
 
 # Start setup
@@ -101,9 +105,10 @@ echo -e "\nsdram I/O: \c"
 echo -n $(vcgencmd measure_volts sdram_i|awk -F "=" '{print $2}')
 echo -e "\t\tsdram PHY:  \c"
 echo -n $(vcgencmd measure_volts sdram_p|awk -F "=" '{print $2 ""}')
+echo
 
 # Display frequencies
-echo -e "\n${bold}${blue}  R E A L T I M E   C L O C K    F R E Q U E N C I E S"|pad
+echo -e "${bold}${blue}  R E A L T I M E   C L O C K    F R E Q U E N C I E S"|pad
 for src in arm core h264 isp v3d uart pwm emmc pixel vec hdmi dpi ;do
   echo -e "$src\t $(echo "scale=0;$(vcgencmd measure_clock $src|cut -f2 -d "=") / 1000000"|bc -l) MHz"
 done | pr --indent=0 -r -t -3 -e3
@@ -180,7 +185,7 @@ echo "${yellow}The Linux kernel is $kern bit and the OS userspace is $userspace 
 echo -e "${bold}${blue}  D R I V E   F E A T U R E S"|pad
 rootfspart=$(findmnt | grep "^/" | tr -s " " | cut -d " " -f 2)
 if [[ $rootfspart = "/dev/sda2" ]]; then
-  echo "The rootfs partition is on a USB device - UASP supported when driver listed as uas${yellow}"
+  echo "The rootfs partition is on a ${green}USB${default} device - UASP supported when driver listed as uas${yellow}"
   lsusb -t|grep -E --color=never 'uas|usb-storage' 
   if [[ $(lsblk -D|grep sda2|tr -s " "|cut -d " " -f 4) = "0B" ]]; then
 	echo "${red}TRIM is NOT supported on this device - may be controller rather than drive or old firmware${default}"
@@ -194,7 +199,7 @@ if [[ $rootfspart = "/dev/sda2" ]]; then
   fi
   sudo fdisk -l /dev/sda|grep --color=never size
 elif [[ $rootfspart = "/dev/mmcblk0p2" ]]; then
-  echo "The rootfs partition is running on an SD Card"
+  echo "The rootfs partition is running on an ${green}SD Card${default}"
   if [[ $(lsblk -D|grep mmcblk0p2|tr -s " "|cut -d " " -f 4) = "0B" ]]; then
 	echo "${red}TRIM is NOT supported on this device - unusual, cheap or old card?${default}"
   else
@@ -206,7 +211,7 @@ elif [[ $rootfspart = "/dev/mmcblk0p2" ]]; then
 	echo "${red}The start sector of the rootfs partition is NOT ALIGNED to a 1MB boundary${default}"
   fi
   sudo fdisk -l /dev/mmcblk0|grep --color=never size
-else echo "${red}rootfs is on a non-standard device${default}" ;
+else echo "The rootfs partition is on an ${green}NVME${default} or other device" ;
 fi
 echo -n "${yellow}USB quirk running (for flaky USB to SATA adapters i.e. JMS578) - "
 if output=$(cat /sys/module/usb_storage/parameters/quirks) && [ -z "$output" ]; then
@@ -230,10 +235,12 @@ else
 fi
 output3=$(rpi-eeprom-config)
 output4=$(echo "$output3"|grep -i boot_order)
-if [[ "$output4" != "" ]]; then
+if [[ "$output4" == "BOOT_ORDER=0xf41" ]]; then
+  echo "${green}Custom setting saved but it's the DEFAULT boot order 0xf41 - tries SD, USB-MSD, then RESTART${default}"
+elif [[ "$output4" != "" ]]; then
   echo "${yellow}R to L - 1-SD, 2-NET, 3-RPI, 4-USB-MSD, 6-NVME, 7-HTTP, f-RESTART"
-  echo "$output4"
-elif [[ "$output2" == "" ]]; then
+  echo "Non-Default $output4"
+elif [[ "$output2" != "" ]]; then
   echo "${green}DEFAULT boot order 0xf41 in effect - no custom setting - tries SD, USB-MSD, then RESTART${default}"
 fi
 
