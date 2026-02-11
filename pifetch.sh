@@ -247,7 +247,7 @@ fi
 
 read -p "${blue} Press key for more ${default}" -n1 -s
 echo
-echo -e "${bold}${blue}  P C I / U S B   D E V I C E S"|pad
+echo -e "${bold}${blue}  P C I (Pi4+) / U S B   D E V I C E S"|pad
 lspci
 lsusb
 
