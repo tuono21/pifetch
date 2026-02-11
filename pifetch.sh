@@ -9,7 +9,8 @@
 # 6-30-2025 add desktop info
 # 2-5-2026 add cpu revision
 # 2-10-26 fixed cpu/board revision, blue bars pad() and boot_order
-# rpi-eeprom-config -e to remove boot_order setting entirely once set
+# NOTE: Use rpi-eeprom-config -e to remove boot_order setting entirely once set
+# fix lspci issues w/pi3 and overwrite pause msg presskey()
 # ? feature - add check for loaded module to determine cpu stepping
 
 bold=`tput smso`
@@ -33,6 +34,12 @@ pad() {
 		columns=100
 	fi	
 	echo "${temp:0:$columns}${default}"
+}
+
+presskey() {
+	echo -n "${bold}${red} Press key for more ${default}"
+	read -n1 -s
+	echo -ne "\r\033[0K\r"
 }
 
 # Start setup
@@ -123,6 +130,7 @@ echo -e "${bold}${blue}  M E M O R Y   S I Z E"|pad
 vcgencmd get_mem gpu
 free -h
 
+presskey
 echo -e "${bold}${blue}  V I D E O   M O D E"|pad
 if command -v kmsprint 2>&1 >/dev/null; then
 	kmsprint|grep -iv plane
@@ -145,9 +153,7 @@ if [[ $session == "" ]]; then
 else
 	loginctl show-session $session | grep -i "service\|desktop\|type"
 fi
-read -p "${blue} Press key for more ${default}" -n1 -s
 
-echo
 echo -e "${bold}${blue}  O T P   R E G I S T E R S"|pad
 B="$(printf "%032s\n" $(echo "obase=2;ibase=16;$(A=$(vcgencmd otp_dump|grep 30:|cut -c 4-);echo ${A^^})"|bc)|tr ' ' '0')"
 C="$(expr substr $B 7 1)"
@@ -184,6 +190,7 @@ else
 fi
 echo "${yellow}The Linux kernel is ${green}$kern${yellow} bit and the OS userspace is ${green}$userspace${yellow} bit"
 
+presskey
 echo -e "${bold}${blue}  D R I V E   F E A T U R E S"|pad
 rootfspart=$(findmnt | grep "^/" | tr -s " " | cut -d " " -f 2)
 if [[ $rootfspart = "/dev/sda2" ]]; then
@@ -228,11 +235,12 @@ df -Th|grep -v "tmp"
 #32bit broked pi zero 2w
 echo -e "${bold}${blue}  E E P R O M   V E R S I O N S  - VL805 supports onboard USB3 controller on Pi4 models"|pad
 output=$(sudo rpi-eeprom-update)
-output2=$(echo "$output"|grep -i skipping)
+output2=$(echo "$output"|grep -i raspberry)
 if [[ "$output2" == "" ]]; then
   echo "$output"
 else
   echo "No EEPROM found - pre-Pi4 board"
+  noprom=1
 fi
 output3=$(rpi-eeprom-config)
 output4=$(echo "$output3"|grep -i boot_order)
@@ -241,14 +249,18 @@ if [[ "$output4" == "BOOT_ORDER=0xf41" ]]; then
 elif [[ "$output4" != "" ]]; then
   echo "${yellow}R to L - 1-SD, 2-NET, 3-RPI, 4-USB-MSD, 6-NVME, 7-HTTP, f-RESTART"
   echo "Non-Default $output4"
-elif [[ "$output2" == "" ]]; then
+elif [[ "$noprom" != "1" ]]; then
   echo "${green}DEFAULT boot order 0xf41 in effect - no custom setting - tries SD, USB-MSD, then RESTART${default}"
 fi
 
-read -p "${blue} Press key for more ${default}" -n1 -s
-echo
 echo -e "${bold}${blue}  P C I (Pi4+) / U S B   D E V I C E S"|pad
-lspci
+pciout=$(lspci > /dev/null 2>&1)
+pcierr=$(echo $?)
+if [[ "$pcierr" != "0" ]]; then
+  echo "No PCI devices"
+else 
+  lspci 
+fi
 lsusb
 
 #read -p "${blue} Press key for neofetch ${default}" -n1 -s
