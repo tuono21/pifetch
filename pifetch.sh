@@ -237,7 +237,7 @@ df -Th|grep -v "tmp"
 #32bit broked pi zero 2w
 echo -e "${bold}${blue}  E E P R O M   V E R S I O N S  - VL805 supports onboard USB3 controller on Pi4 models"|pad
 output=$(sudo rpi-eeprom-update)
-output2=$(echo "$output"|grep -i raspberry)
+output2=$(echo "$output"|grep -i "tool only works")
 if [[ "$output2" == "" ]]; then
   echo "$output"
 else
