@@ -12,6 +12,8 @@
 # NOTE: Use rpi-eeprom-config -e to remove boot_order setting entirely once set
 # fix lspci issues w/pi3 and overwrite pause msg presskey()
 # ? feature - add check for loaded module to determine cpu stepping
+# ugh.. cpu type info updated
+
 
 bold=`tput smso`
 boldoff=`tput rmso`
@@ -79,7 +81,7 @@ echo
 echo -e "${bold}${blue}  S Y S T E M  D E T A I L S  F O R: $(whoami)@$(hostname)" | pad 
 echo -en "$(cat /proc/cpuinfo | grep 'Model'| cut -f2 -d ":"|trim)"
 echo -e " - Board $(cat /proc/cpuinfo | grep Revision|trim)"
-echo -e "$(lscpu|grep "^Model name:"|tr -s " "|cut -d " " -f 3) $(lscpu|grep -v "NUMA"|grep "CPU(s):"|trim) - $(cat /proc/cpuinfo | grep -m 1 'revision'|trim) - $(lscpu | grep Stepping|trim)"
+echo -e "$(lscpu|grep "^Model name:"|tr -s " "|cut -d " " -f 3) $(cat /proc/cpuinfo | grep -m 1 'model name'|cut -d " " -f 3-) - SoC: $(cat /proc/cpuinfo | grep 'Hardware'|cut -d " " -f 2)"
 echo -e "Serial Number $(cat /proc/cpuinfo | grep 'Serial'| cut -f2 -d ":"|trim)${default}"
 output=$(ip addr|grep "inet "|grep -v "scope host"|trim)
 if [[ "$output" == "" ]]; then
