@@ -13,7 +13,7 @@
 # fix lspci issues w/pi3 and overwrite pause msg presskey()
 # ? feature - add check for loaded module to determine cpu stepping
 # ugh.. cpu type info updated
-
+# 021426 restored eeprom fix 32 bit "skipping" msg
 
 bold=`tput smso`
 boldoff=`tput rmso`
@@ -237,8 +237,11 @@ df -Th|grep -v "tmp"
 #32bit broked pi zero 2w
 echo -e "${bold}${blue}  E E P R O M   V E R S I O N S  - VL805 supports onboard USB3 controller on Pi4 models"|pad
 output=$(sudo rpi-eeprom-update)
+#64bit OS pre-pi4
 output2=$(echo "$output"|grep -i "tool only works")
-if [[ "$output2" == "" ]]; then
+#32bit OS pre-pi4
+output2b=$(echo "$output" | grep -i "skipping")
+if [[ "$output2" == "" && "$output2b" == "" ]]; then
   echo "$output"
 else
   echo "No EEPROM found - pre-Pi4 board"
