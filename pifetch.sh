@@ -16,6 +16,7 @@
 # /boot/firmware $ sudo vclog -m | grep dtb_file
 # 007082.631: dtb_file 'bcm2711-rpi-4-b.dtb'
 # bcm2712d0 for pi5 newer stepping
+# also add locale info
 #
 # ugh.. cpu type info updated
 # 021426 restored eeprom fix 32 bit "skipping" msg
