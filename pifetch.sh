@@ -11,7 +11,12 @@
 # 2-10-26 fixed cpu/board revision, blue bars pad() and boot_order
 # NOTE: Use rpi-eeprom-config -e to remove boot_order setting entirely once set
 # fix lspci issues w/pi3 and overwrite pause msg presskey()
+#
 # ? feature - add check for loaded module to determine cpu stepping
+# /boot/firmware $ sudo vclog -m | grep dtb_file
+# 007082.631: dtb_file 'bcm2711-rpi-4-b.dtb'
+# bcm2712d0 for pi5 newer stepping
+#
 # ugh.. cpu type info updated
 # 021426 restored eeprom fix 32 bit "skipping" msg
 
